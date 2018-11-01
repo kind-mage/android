@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "597912246019",
+    "firebase_url": "https://fir-servicepi.firebaseio.com",
+    "project_id": "firebase-servicepi",
+    "storage_bucket": "firebase-servicepi.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:597912246019:android:f434c392498ef06c",
+        "android_client_info": {
+          "package_name": "ru.servicepi.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "597912246019-pcfp2iqbvpklhp38n746ai66ffnr0091.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlXNnCOwmjTkwTUBSFFoBmFMnyjiB7Z3Q"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

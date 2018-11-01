@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Сервис ПИ</string>
+    <string name="app_url">http://vps.malahovsky.net/server3</string>
+</resources>

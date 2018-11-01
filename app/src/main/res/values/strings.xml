@@ -1,0 +1,5 @@
+<resources>
+    <string name="notification_error_ssl_cert_invalid">SSL-сертификат недействительный</string>
+    <string name="ssl_continue">Продолжить</string>
+    <string name="ssl_cancel">Отменить</string>
+</resources>
