@@ -33,7 +33,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.ValueCallback;
-import android.webkit.WebView;
 import android.widget.ProgressBar;
 
 import com.google.android.gms.location.LocationCallback;
@@ -56,6 +55,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class XWalkFragment extends Fragment
 {
@@ -79,6 +80,10 @@ public class XWalkFragment extends Fragment
     private JsonObject mCallback;
 
     private View page;
+
+    private Boolean bFinished = false;
+
+    private Timer timer;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState)
@@ -126,6 +131,29 @@ public class XWalkFragment extends Fragment
             page = inflater.inflate(R.layout.content_xwalk, container, false);
 
             progressBar = (ProgressBar) page.findViewById(R.id.progressBar);
+
+            timer = new Timer();
+            timer.schedule(new TimerTask() {
+
+                @Override
+                public void run()
+                {
+                    if (getActivity() != null)
+                    {
+                        getActivity().runOnUiThread(new Runnable() {
+
+                            @Override
+                            public void run()
+                            {
+                                progressBar.setVisibility(View.VISIBLE);
+                            }
+
+                        });
+                    }
+                }
+
+            }, 2000);
+
             xWalkView = (XWalkView) page.findViewById(R.id.xWalkView);
 
             xWalkView.setResourceClient(new XWalkResourceClient(xWalkView) {
@@ -165,7 +193,7 @@ public class XWalkFragment extends Fragment
                 {
                     Uri uri = Uri.parse(url);
 
-                    if (uri.getScheme().equals("http") || uri.getScheme().equals("https"))
+                    if (bFinished && (uri.getScheme().equals("http") || uri.getScheme().equals("https")))
                     {
                         if (getActivity() != null)
                         {
@@ -198,6 +226,28 @@ public class XWalkFragment extends Fragment
                     final ProgressBar _progressBar = _page.findViewById(R.id.progressBar);
                     final XWalkView _xWalkView = _page.findViewById(R.id.xWalkView);
 
+                    final Timer _timer = new Timer();
+                    _timer.schedule(new TimerTask() {
+
+                        @Override
+                        public void run()
+                        {
+                            if (getActivity() != null)
+                            {
+                                getActivity().runOnUiThread(new Runnable() {
+
+                                    @Override
+                                    public void run()
+                                    {
+                                        _progressBar.setVisibility(View.VISIBLE);
+                                    }
+
+                                });
+                            }
+                        }
+
+                    }, 2000);
+
                     final Dialog dialog = new Dialog(getActivity());
                         dialog.setContentView(_page);
                         dialog.getWindow().setDimAmount(0);
@@ -210,6 +260,8 @@ public class XWalkFragment extends Fragment
                         {
                             if (status == LoadStatus.FINISHED)
                             {
+                                _timer.cancel();
+
                                 _progressBar.setVisibility(View.INVISIBLE);
                                 _xWalkView.setVisibility(View.VISIBLE);
                             }
@@ -218,6 +270,7 @@ public class XWalkFragment extends Fragment
                         @Override
                         public void onJavascriptCloseWindow(XWalkView view)
                         {
+                            _timer.cancel();
                             dialog.dismiss();
                         }
 
@@ -270,55 +323,60 @@ public class XWalkFragment extends Fragment
                 @Override
                 public void onPageLoadStopped(XWalkView view, String url, LoadStatus status)
                 {
-                    super.onPageLoadStopped(view, url, status);
-
-                    switch (status)
+                    if (url != null && !url.equals(""))
                     {
-                        case FINISHED:
+                        switch (status)
+                        {
+                            case FINISHED:
 
-                            if (getActivity() != null)
-                            {
-                                if ((getActivity().getTitle() == null || getActivity().getTitle().equals(""))
-                                        && view.getTitle() != null && !view.getTitle().equals(""))
+                                if (getActivity() != null)
                                 {
-                                    getActivity().setTitle(view.getTitle());
+                                    if ((getActivity().getTitle() == null || getActivity().getTitle().equals(""))
+                                            && view.getTitle() != null && !view.getTitle().equals(""))
+                                    {
+                                        getActivity().setTitle(view.getTitle());
+                                    }
                                 }
-                            }
 
-                            progressBar.setVisibility(View.INVISIBLE);
-                            xWalkView.setVisibility(View.VISIBLE);
+                                timer.cancel();
 
-                            break;
+                                progressBar.setVisibility(View.GONE);
+                                xWalkView.setVisibility(View.VISIBLE);
 
-                        case FAILED:
+                                break;
 
-                            new AlertDialog.Builder(getActivity())
-                                    .setIcon(getActivity().getApplicationInfo().icon)
-                                    .setTitle(getActivity().getApplicationInfo().labelRes)
-                                    .setMessage("Вы не подключены к Интернету")
-                                    .setPositiveButton("Повторить", new DialogInterface.OnClickListener() {
+                            case FAILED:
 
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i)
-                                        {
-                                            xWalkView.reload(XWalkView.RELOAD_NORMAL);
-                                        }
+                                new AlertDialog.Builder(getActivity())
+                                        .setIcon(getActivity().getApplicationInfo().icon)
+                                        .setTitle(getActivity().getApplicationInfo().labelRes)
+                                        .setMessage("Вы не подключены к Интернету")
+                                        .setPositiveButton("Повторить", new DialogInterface.OnClickListener() {
 
-                                    })
-                                    .setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i)
+                                            {
+                                                xWalkView.reload(XWalkView.RELOAD_NORMAL);
+                                            }
 
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i)
-                                        {
-                                            getActivity().onBackPressed();
-                                        }
+                                        })
+                                        .setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 
-                                    })
-                                    .setCancelable(false)
-                                    .create()
-                                    .show();
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i)
+                                            {
+                                                getActivity().onBackPressed();
+                                            }
 
-                            break;
+                                        })
+                                        .setCancelable(false)
+                                        .create()
+                                        .show();
+
+                                break;
+                        }
+
+                        bFinished = true;
                     }
                 }
 
@@ -329,6 +387,13 @@ public class XWalkFragment extends Fragment
         }
 
         return page;
+    }
+
+    @Override
+    public void onDestroyView()
+    {
+        super.onDestroyView();
+        timer.cancel();
     }
 
     private void openFile()

@@ -14,10 +14,12 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
@@ -26,11 +28,9 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
@@ -68,6 +68,7 @@ public class XWalkActivity extends AppCompatActivity
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -93,7 +94,21 @@ public class XWalkActivity extends AppCompatActivity
         drawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
 
-        toggle = new ActionBarDrawerToggle(this, drawerLayout, 0, 0);
+        final CoordinatorLayout content = (CoordinatorLayout) findViewById(R.id.content);
+
+        toggle = new ActionBarDrawerToggle(this, drawerLayout, 0, 0) {
+
+            @Override
+            public void onDrawerSlide(View drawerView, float slideOffset)
+            {
+                super.onDrawerSlide(drawerView, slideOffset);
+
+                float slideX = drawerView.getWidth() * slideOffset;
+                content.setTranslationX(slideX);
+            }
+
+        };
+
         toggle.setToolbarNavigationClickListener(new View.OnClickListener() {
 
             @Override
@@ -104,7 +119,6 @@ public class XWalkActivity extends AppCompatActivity
 
         });
 
-        final FrameLayout frameLayout = (FrameLayout) findViewById(R.id.frameLayout);
         final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
         xWalkView = (XWalkView) findViewById(R.id.xWalkView);
         xWalkView.setUIClient(new XWalkUIClient(xWalkView) {
@@ -114,11 +128,8 @@ public class XWalkActivity extends AppCompatActivity
             {
                 if (status == LoadStatus.FINISHED)
                 {
-                    Log.e("Log", "bringToFront");
-                    progressBar.setVisibility(View.INVISIBLE);
+                    progressBar.setVisibility(View.GONE);
                     xWalkView.setVisibility(View.VISIBLE);
-
-                    frameLayout.bringToFront();
                 }
             }
 
@@ -142,9 +153,6 @@ public class XWalkActivity extends AppCompatActivity
 
         });
 
-        if (checkIntent(getIntent()))
-            loadDefaultServer();
-
 //        if (getSharedPreferences(getPackageName(), Context.MODE_PRIVATE)
 //                .getInt("firebase_status", 0) == -1)
 //        {
@@ -165,37 +173,33 @@ public class XWalkActivity extends AppCompatActivity
             }
 
         };
+
+        checkIntent();
     }
 
     @Override
     protected void onNewIntent(Intent intent)
     {
-        super.onNewIntent(intent);
-        checkIntent(intent);
+        setIntent(intent);
+        checkIntent();
     }
 
-    private boolean checkIntent(Intent intent)
+    private void checkIntent()
     {
-        Log.e("Log", "checkIntent");
-        if (intent != null && intent.getExtras() != null
-                && intent.getExtras().containsKey("google.message_id"))
+        if (getIntent().hasExtra("url"))
         {
-           if (intent.getExtras().containsKey("url"))
-           {
-               try
-               {
-                   URL url = new URL(intent.getExtras().getString("url"));
-                   xWalkView.loadUrl(url.getProtocol() + "://" + url.getHost() + "/youdo/left.php");
-                   loadPageStart(url.toString(), intent.getExtras().containsKey("title") ? intent.getExtras().getString("title") : "");
-               }
-               catch (MalformedURLException e)
-               {
+            String url = getIntent().getStringExtra("url");
+            loadPageStart(url, "");
 
-               }
-               return false;
-           }
+            Uri uri = Uri.parse(url);
+            xWalkView.loadUrl(uri.getScheme() + "://" + uri.getHost() + "/youdo/left.php");
         }
-        return true;
+        else
+        {
+            String url = getString(R.string.app_url);
+            loadPageStart(url + "/", "");
+            xWalkView.loadUrl(url + "/left.php");
+        }
     }
 
     private String getPath(String sUrl)
@@ -274,11 +278,11 @@ public class XWalkActivity extends AppCompatActivity
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(onMessageReceived);
     }
 
-    private void loadDefaultServer()
-    {
-        xWalkView.loadUrl(getString(R.string.app_url) + "/left.php");
-        loadPageStart(getString(R.string.app_url) + "/", "Главная");
-    }
+//    private void loadDefaultServer()
+//    {
+//        xWalkView.loadUrl(getString(R.string.app_url) + "/left.php");
+//        // loadPageStart(getString(R.string.app_url) + "/", "Главная");
+//    }
 
     @Override
     public void onBackPressed()

@@ -1,10 +1,11 @@
 package net.malahovsky.appforsale;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Handler;
 import android.provider.Settings;
 import android.util.AttributeSet;
-import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -43,8 +44,6 @@ public class XWalkView extends org.xwalk.core.XWalkView
         @org.xwalk.core.JavascriptInterface
         public void postMessage(final String command, final String sParams)
         {
-            Log.e("Log", command + " " + sParams);
-
             handler.post(new Runnable() {
 
                 @Override
@@ -77,6 +76,21 @@ public class XWalkView extends org.xwalk.core.XWalkView
                                         params.get("url").getAsString(),
                                         params.get("title").getAsString()
                                 );
+                                break;
+
+                            case "openDocument":
+
+                                try
+                                {
+                                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                                    intent.setData(Uri.parse(params.get("url").getAsString()));
+                                    getContext().startActivity(intent);
+                                }
+                                catch (Exception e)
+                                {
+
+                                }
+
                                 break;
 
                             case "getCurrentPosition":

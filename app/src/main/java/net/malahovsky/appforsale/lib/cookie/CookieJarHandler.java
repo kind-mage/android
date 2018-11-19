@@ -22,10 +22,7 @@ public class CookieJarHandler implements CookieJar
     @Override
     public void saveFromResponse(HttpUrl url, List<Cookie> cookies)
     {
-        for (Cookie cookie : cookies)
-        {
-            cookieManager.setCookie(url.toString(), cookie.name() + "=" + cookie.value());
-        }
+
     }
 
     @Override
@@ -36,10 +33,10 @@ public class CookieJarHandler implements CookieJar
         String cookieString = cookieManager.getCookie(url.toString());
         if (cookieString != null && cookieString.length() > 0)
         {
-            String[] cookies = cookieString.split(";");
-            for (String cookie : cookies)
+            String[] cookies = cookieString.split("; ");
+            for (int i = cookies.length; i > 0; i--)
             {
-                result.add(Cookie.parse(url, cookie.trim()));
+                result.add(Cookie.parse(url, cookies[i-1]));
             }
         }
 

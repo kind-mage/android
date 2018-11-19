@@ -19,8 +19,8 @@ android {
 
         servicepi {
             applicationId "ru.servicepi.app"
-            versionCode 18
-            versionName "3.9"
+            versionCode 21
+            versionName "3.12"
             dimension "tier"
         }
 

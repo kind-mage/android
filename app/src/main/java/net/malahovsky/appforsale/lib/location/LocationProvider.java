@@ -33,8 +33,8 @@ public class LocationProvider
     public LocationProvider(Context context)
     {
         locationRequest = LocationRequest.create()
-                .setInterval(15*60*1000)
-                .setFastestInterval(15*60*1000)
+                .setInterval(15 * 60 * 1000)
+                .setFastestInterval(15 * 60 * 1000)
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         pendingIntent = PendingIntent.getService(context, 0, new Intent(context, LocationService.class), PendingIntent.FLAG_CANCEL_CURRENT);
@@ -50,6 +50,7 @@ public class LocationProvider
         {
             return;
         }
+
         locationProviderClient.requestLocationUpdates(locationRequest, pendingIntent);
     }
 }
