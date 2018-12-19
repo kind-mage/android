@@ -32,7 +32,10 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.webkit.ValueCallback;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 
 import com.google.android.gms.location.LocationCallback;
@@ -42,8 +45,9 @@ import com.google.android.gms.location.LocationServices;
 import com.google.gson.JsonObject;
 import com.google.zxing.integration.android.IntentIntegrator;
 
-import net.malahovsky.appforsale.lib.location.LocationProvider;
+import net.malahovsky.appforsale.lib.location.LocationService;
 
+import org.xwalk.core.XWalkCookieManager;
 import org.xwalk.core.XWalkJavascriptResult;
 import org.xwalk.core.XWalkResourceClient;
 import org.xwalk.core.XWalkUIClient;
@@ -61,6 +65,7 @@ import java.util.TimerTask;
 public class XWalkFragment extends Fragment
 {
     private ProgressBar progressBar;
+    private FrameLayout layer;
     private XWalkView xWalkView;
 
     private static final int PERMISSION_REQUEST_CAMERA = 1001;
@@ -124,13 +129,19 @@ public class XWalkFragment extends Fragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        getActivity().setTitle(getArguments().getString("title", ""));
+        if (getActivity() != null)
+        {
+            getActivity().setTitle(
+                    getArguments().getString("title", "")
+            );
+        }
 
         if (page == null)
         {
             page = inflater.inflate(R.layout.content_xwalk, container, false);
 
             progressBar = (ProgressBar) page.findViewById(R.id.progressBar);
+            layer = (FrameLayout) page.findViewById(R.id.layer);
 
             timer = new Timer();
             timer.schedule(new TimerTask() {
@@ -138,6 +149,7 @@ public class XWalkFragment extends Fragment
                 @Override
                 public void run()
                 {
+
                     if (getActivity() != null)
                     {
                         getActivity().runOnUiThread(new Runnable() {
@@ -150,11 +162,14 @@ public class XWalkFragment extends Fragment
 
                         });
                     }
+
                 }
 
             }, 2000);
 
             xWalkView = (XWalkView) page.findViewById(R.id.xWalkView);
+
+            xWalkView.getSettings().setSaveFormData(false);
 
             xWalkView.setResourceClient(new XWalkResourceClient(xWalkView) {
 
@@ -224,6 +239,7 @@ public class XWalkFragment extends Fragment
                     View _page = LayoutInflater.from(getActivity()).inflate(R.layout.content_xwalk, null);
 
                     final ProgressBar _progressBar = _page.findViewById(R.id.progressBar);
+                    final FrameLayout _layer = _page.findViewById(R.id.layer);
                     final XWalkView _xWalkView = _page.findViewById(R.id.xWalkView);
 
                     final Timer _timer = new Timer();
@@ -263,7 +279,8 @@ public class XWalkFragment extends Fragment
                                 _timer.cancel();
 
                                 _progressBar.setVisibility(View.INVISIBLE);
-                                _xWalkView.setVisibility(View.VISIBLE);
+                                _progressBar.setVisibility(View.VISIBLE);
+                                fadeOut(_layer);
                             }
                         }
 
@@ -328,7 +345,6 @@ public class XWalkFragment extends Fragment
                         switch (status)
                         {
                             case FINISHED:
-
                                 if (getActivity() != null)
                                 {
                                     if ((getActivity().getTitle() == null || getActivity().getTitle().equals(""))
@@ -336,17 +352,22 @@ public class XWalkFragment extends Fragment
                                     {
                                         getActivity().setTitle(view.getTitle());
                                     }
+
+                                    XWalkCookieManager cookieManager = new XWalkCookieManager();
+                                    cookieManager.setAcceptCookie(true);
+                                    cookieManager.setAcceptFileSchemeCookies(true);
+
+                                    getActivity().getSharedPreferences(getActivity().getPackageName(), Context.MODE_PRIVATE)
+                                            .edit()
+                                            .putString("cookies", cookieManager.getCookie(getString(R.string.app_url)))
+                                            .apply();
                                 }
 
-                                timer.cancel();
-
-                                progressBar.setVisibility(View.GONE);
-                                xWalkView.setVisibility(View.VISIBLE);
+                                hideProgress();
 
                                 break;
 
                             case FAILED:
-
                                 new AlertDialog.Builder(getActivity())
                                         .setIcon(getActivity().getApplicationInfo().icon)
                                         .setTitle(getActivity().getApplicationInfo().labelRes)
@@ -383,17 +404,65 @@ public class XWalkFragment extends Fragment
             });
 
             xWalkView.loadUrl(getArguments().getString("url"));
-
         }
 
         return page;
+    }
+
+    private void fadeOut(final View view)
+    {
+        Animation animation = new AlphaAnimation(1, 0);
+        animation.setDuration(500);
+
+        animation.setAnimationListener(new Animation.AnimationListener() {
+
+            @Override
+            public void onAnimationStart(Animation animation)
+            {
+                view.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation)
+            {
+                view.setVisibility(View.INVISIBLE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation)
+            {
+
+            }
+
+        });
+
+        view.startAnimation(animation);
     }
 
     @Override
     public void onDestroyView()
     {
         super.onDestroyView();
-        timer.cancel();
+
+        if (timer != null)
+        {
+            timer.cancel();
+        }
+    }
+
+    public void hideProgress()
+    {
+        if (getActivity() == null || xWalkView.getVisibility() == View.VISIBLE)
+            return;
+
+        progressBar.setVisibility(View.INVISIBLE);
+        xWalkView.setVisibility(View.VISIBLE);
+        fadeOut(layer);
+
+        if (timer != null)
+        {
+            timer.cancel();
+        }
     }
 
     private void openFile()
@@ -465,7 +534,7 @@ public class XWalkFragment extends Fragment
     {
         mCallback = params;
 
-        String[] PERMISSIONS = { Manifest.permission.ACCESS_FINE_LOCATION };
+        String[] PERMISSIONS = { Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION };
         if (!hasPermissions(getActivity(), PERMISSIONS))
         {
             ActivityCompat.requestPermissions(getActivity(), PERMISSIONS, PERMISSION_REQUEST_ACCESS_FINE_LOCATION);
@@ -604,7 +673,7 @@ public class XWalkFragment extends Fragment
         }
     }
 
-    private static boolean hasPermissions(Context context, String... permissions)
+    public static boolean hasPermissions(Context context, String... permissions)
     {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null)
         {
@@ -620,6 +689,7 @@ public class XWalkFragment extends Fragment
         return true;
     }
 
+    @SuppressLint("NewApi")
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
     {
@@ -633,7 +703,7 @@ public class XWalkFragment extends Fragment
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
                 {
                     getCurrentPosition(mCallback);
-                    LocationProvider.getInstance(getActivity()).requestLocationUpdates();
+                    ActivityCompat.startForegroundService(getActivity(), new Intent(getActivity(), LocationService.class));
                 }
                 else
                 {
@@ -719,11 +789,17 @@ public class XWalkFragment extends Fragment
 
     private void callBackExecute(int index, String result)
     {
-        xWalkView.loadUrl("javascript:app.callBackExecute(" + index + ", " + result + ")");
+        if (xWalkView != null)
+        {
+            xWalkView.loadUrl("javascript:app.callBackExecute(" + index + ", " + result + ")");
+        }
     }
 
     public void reload()
     {
-        xWalkView.reload(XWalkView.RELOAD_NORMAL);
+        if (xWalkView != null)
+        {
+            xWalkView.reload(XWalkView.RELOAD_NORMAL);
+        }
     }
 }

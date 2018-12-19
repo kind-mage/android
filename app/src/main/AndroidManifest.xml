@@ -3,6 +3,7 @@
     package="net.malahovsky.appforsale"
     android:installLocation="internalOnly">
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -12,8 +13,13 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="18" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+
+    <!--<meta-data-->
+        <!--android:name="com.google.firebase.messaging.default_notification_icon"-->
+        <!--android:resource="@mipmap/ic_stat_name" />-->
 
     <application
         android:name=".XWalkAppication"
@@ -35,6 +41,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <intent-filter>
+                <action android:name="appforsale.exec" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
         </activity>
 
         <service android:name=".lib.firebase.MessagingService">
@@ -53,7 +64,8 @@
             </intent-filter>
         </receiver>
 
-        <service android:name=".lib.location.LocationService" />
+        <service android:name=".lib.location.LocationService"
+            android:enabled="true" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"

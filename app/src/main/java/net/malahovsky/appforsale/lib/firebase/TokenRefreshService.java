@@ -41,7 +41,7 @@ public class TokenRefreshService extends Service
 
             OkHttpClient httpClient = new OkHttpClient.Builder()
                     .connectTimeout(30, TimeUnit.SECONDS)
-                    .cookieJar(new CookieJarHandler())
+                    .cookieJar(new CookieJarHandler(getApplicationContext()))
                     .build();
 
             Uri uri = Uri.parse(getString(R.string.app_url));

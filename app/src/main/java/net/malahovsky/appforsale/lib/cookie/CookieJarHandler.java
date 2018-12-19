@@ -1,6 +1,6 @@
 package net.malahovsky.appforsale.lib.cookie;
 
-import org.xwalk.core.XWalkCookieManager;
+import android.content.Context;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,12 +11,11 @@ import okhttp3.HttpUrl;
 
 public class CookieJarHandler implements CookieJar
 {
-    XWalkCookieManager cookieManager = new XWalkCookieManager();
+    private Context mContext;
 
-    public CookieJarHandler()
+    public CookieJarHandler(Context context)
     {
-        cookieManager.setAcceptCookie(true);
-        cookieManager.setAcceptFileSchemeCookies(true);
+        mContext = context;
     }
 
     @Override
@@ -30,7 +29,7 @@ public class CookieJarHandler implements CookieJar
     {
         List<Cookie> result = new ArrayList<Cookie>();
 
-        String cookieString = cookieManager.getCookie(url.toString());
+        String cookieString = mContext.getSharedPreferences(mContext.getPackageName(), Context.MODE_PRIVATE).getString("cookies", null);
         if (cookieString != null && cookieString.length() > 0)
         {
             String[] cookies = cookieString.split("; ");

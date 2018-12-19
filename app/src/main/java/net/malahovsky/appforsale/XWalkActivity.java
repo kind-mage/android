@@ -1,5 +1,6 @@
 package net.malahovsky.appforsale;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Fragment;
@@ -21,6 +22,7 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -38,7 +40,7 @@ import com.google.firebase.messaging.RemoteMessage;
 import com.google.gson.JsonObject;
 
 import net.malahovsky.appforsale.lib.firebase.TokenRefreshService;
-import net.malahovsky.appforsale.lib.location.LocationProvider;
+import net.malahovsky.appforsale.lib.location.LocationService;
 import net.malahovsky.appforsale.utils.Keyboards;
 
 import org.xwalk.core.XWalkUIClient;
@@ -96,6 +98,9 @@ public class XWalkActivity extends AppCompatActivity
 
         final CoordinatorLayout content = (CoordinatorLayout) findViewById(R.id.content);
 
+        final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        xWalkView = (XWalkView) findViewById(R.id.xWalkView);
+
         toggle = new ActionBarDrawerToggle(this, drawerLayout, 0, 0) {
 
             @Override
@@ -119,8 +124,6 @@ public class XWalkActivity extends AppCompatActivity
 
         });
 
-        final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        xWalkView = (XWalkView) findViewById(R.id.xWalkView);
         xWalkView.setUIClient(new XWalkUIClient(xWalkView) {
 
             @Override
@@ -159,7 +162,11 @@ public class XWalkActivity extends AppCompatActivity
             startService(new Intent(getApplicationContext(), TokenRefreshService.class));
 //        }
 
-        LocationProvider.getInstance(this).requestLocationUpdates();
+
+        if (XWalkFragment.hasPermissions(this, new String[] { Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION }))
+        {
+            ActivityCompat.startForegroundService(this, new Intent(this, LocationService.class));
+        }
 
         onMessageReceived = new BroadcastReceiver() {
 
@@ -180,8 +187,11 @@ public class XWalkActivity extends AppCompatActivity
     @Override
     protected void onNewIntent(Intent intent)
     {
-        setIntent(intent);
-        checkIntent();
+        if (intent.hasExtra("url"))
+        {
+            setIntent(intent);
+            checkIntent();
+        }
     }
 
     private void checkIntent()
@@ -214,6 +224,7 @@ public class XWalkActivity extends AppCompatActivity
             return "";
         }
     }
+
 
     private boolean hasAction(RemoteMessage remoteMessage)
     {
@@ -277,12 +288,6 @@ public class XWalkActivity extends AppCompatActivity
         super.onPause();
         LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(onMessageReceived);
     }
-
-//    private void loadDefaultServer()
-//    {
-//        xWalkView.loadUrl(getString(R.string.app_url) + "/left.php");
-//        // loadPageStart(getString(R.string.app_url) + "/", "Главная");
-//    }
 
     @Override
     public void onBackPressed()
@@ -473,6 +478,15 @@ public class XWalkActivity extends AppCompatActivity
         if (fragment instanceof XWalkFragment)
         {
             ((XWalkFragment) fragment).getCurrentPosition(params);
+        }
+    }
+
+    public void hideProgress()
+    {
+        Fragment fragment = getCurrentFragment();
+        if (fragment instanceof XWalkFragment)
+        {
+            ((XWalkFragment) fragment).hideProgress();
         }
     }
 

@@ -14,21 +14,32 @@ import java.util.HashMap;
 
 public class XWalkView extends org.xwalk.core.XWalkView
 {
+    private Context mContext;
+
     public XWalkView(Context context, AttributeSet attrs)
     {
         super(context, attrs);
         addJavascriptInterface(new JavascriptInterface(this), "exec");
+
+        mContext = context;
     }
 
     @Override
     public void loadUrl(String url)
     {
-        HashMap<String, String> headers = new HashMap<String, String>();
-        headers.put("bm-device", "android");
-        headers.put("bm-device-id", Settings.Secure.getString(getContext().getContentResolver(), Settings.Secure.ANDROID_ID));
-        headers.put("bm-api-version", "3");
+//        if (!url.startsWith("javascript") && Uri.parse(url).getHost().equals(Uri.parse(mContext.getString(R.string.app_url)).getHost()))
+//        {
+            HashMap<String, String> headers = new HashMap<String, String>();
+            headers.put("bm-device", "android");
+            headers.put("bm-device-id", Settings.Secure.getString(getContext().getContentResolver(), Settings.Secure.ANDROID_ID));
+            headers.put("bm-api-version", "3");
 
-        super.loadUrl(url, headers);
+            super.loadUrl(url, headers);
+//        }
+//        else
+//        {
+//            super.loadUrl(url);
+//        }
     }
 
     class JavascriptInterface
@@ -132,6 +143,9 @@ public class XWalkView extends org.xwalk.core.XWalkView
                                 );
                                 break;
 
+                            case "hideProgress":
+                                root.hideProgress();
+                                break;
 
                             // Additional
 
@@ -142,14 +156,6 @@ public class XWalkView extends org.xwalk.core.XWalkView
                             case "openBar":
                                 root.getSupportActionBar().show();
                                 break;
-
-//                            case "scrollOff":
-//                                root.scrollOff();
-//                                break;
-
-//                            case "scrollOn":
-//                                root.scrollOn();
-//                                break;
 
                             case "getQRCode":
                                 root.getQRCode(
