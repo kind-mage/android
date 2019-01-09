@@ -126,10 +126,7 @@ public class XWalkView extends org.xwalk.core.XWalkView
                                 break;
 
                             case "closeController":
-                                if (root.getFragmentManager().getBackStackEntryCount() > 1)
-                                {
-                                    root.onBackPressed();
-                                }
+                                root.closeController();
                                 break;
 
                             case "reload":
@@ -143,12 +140,12 @@ public class XWalkView extends org.xwalk.core.XWalkView
                                 );
                                 break;
 
-                            case "hideProgress":
-                                root.hideProgress();
-                                break;
-
-                            // Additional
-
+//                            case "hideProgress":
+//                                root.hideProgress();
+//                                break;
+//
+//                            // Additional
+//
                             case "closeBar":
                                 root.getSupportActionBar().hide();
                                 break;

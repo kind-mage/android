@@ -23,7 +23,6 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
 import net.malahovsky.appforsale.R;
-import net.malahovsky.appforsale.lib.cookie.CookieJarHandler;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -80,7 +79,7 @@ public class LocationService extends Service
                 {
                     OkHttpClient httpClient = new OkHttpClient.Builder()
                             .connectTimeout(30, TimeUnit.SECONDS)
-                            .cookieJar(new CookieJarHandler(getApplicationContext()))
+                           // .cookieJar(new CookieJarHandler(getApplicationContext()))
                             .build();
 
                     Uri uri = Uri.parse(getString(R.string.app_url));
